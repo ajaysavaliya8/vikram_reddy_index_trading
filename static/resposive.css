@@ -1,0 +1,236 @@
+@media screen and (max-width: 1620px) {
+    /* nifty */
+}
+
+@media screen and (max-width: 1560px) {
+    /* nifty */
+}
+
+@media screen and (max-width: 1440px) {
+    /* nifty */
+}
+
+@media screen and (max-width: 1360px) {
+
+    /* nifty */
+    .buttons .btnn {
+        width: 130px;
+        font-size: 14px;
+    }
+
+    .btenn {
+        font-size: 14px;
+        height: 44px;
+    }
+}
+
+@media screen and (max-width: 1280px) {
+
+    /* nifty */
+    .buttons .btnn {
+        width: 120px;
+    }
+
+}
+
+@media screen and (max-width: 1140px) {
+
+    /* nifty */
+    .buttons .btnn {
+        width: 105px;
+        padding: 15px 0;
+    }
+}
+
+@media screen and (max-width: 1024px) {
+
+    /* nifty */
+    .buttons .btnn,
+    .btenn {
+        font-size: 12px;
+    }
+
+    .buttons .btnn {
+        width: 100px;
+    }
+
+    .btenn {
+        width: 60px;
+    }
+
+    th,
+    td {
+        padding: 10px 5px;
+    }
+
+    table {
+        padding: 20px;
+    }
+
+    .tab-content.active {
+        padding: 0 0px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+
+    /* nifty */
+    .tabs button {
+        width: 30%;
+    }
+
+    .buttons {
+        flex-wrap: wrap;
+    }
+
+    .buttons .btnn,
+    .btenn {
+        font-size: 14px;
+        margin-bottom: 10px;
+    }
+
+    .buttons .btnn {
+        width: 160px;
+    }
+
+    .btenn {
+        width: 80px;
+    }
+
+    .form-groupcheckbox label,
+    .form-groupp label {
+        font-size: 16px;
+    }
+
+    th,
+    td {
+        font-size: 10px;
+    }
+
+    .butttt {
+        flex-wrap: nowrap;
+    }
+
+    .form-groupp {
+        padding: 5px 0 5px 20px;
+    }
+}
+
+@media screen and (max-width: 640px) {
+
+    /* nifty */
+    .buttons .btnn {
+        width: 130px;
+    }
+
+    .btenn {
+        width: 65px;
+    }
+
+    table {
+        padding: 5px;
+    }
+
+    .tab-content.active {
+        padding: 5px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+
+    /* nifty */
+    .tabs button {
+        width: 30%;
+    }
+
+    .form-groupcheckbox,
+    .form-groupp {
+        flex-wrap: wrap;
+    }
+
+    .form-groupp {
+        display: flex;
+        justify-content: flex-start;
+        padding: 0 20px;
+    }
+
+    .fo_group {
+        margin-left: -20px;
+    }
+
+    .buttons .btnn {
+        width: auto;
+        padding: 15px;
+    }
+
+    .btenn {
+        width: 55px;
+    }
+
+    .buttons {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+    }
+
+    th,
+    td {
+        padding: 2px;
+    }
+
+    .butttt {
+        font-size: 14px;
+    }
+
+    .butttt .btn {
+        padding: 8px;
+    }
+}
+
+@media screen and (max-width: 375px) {
+
+    /* nifty */
+    .buttons .btnn {
+        width: 130px;
+    }
+
+    /* .btenn {
+        width: 65px;
+    } */
+
+    th,
+    td {
+        font-size: 7px;
+    }
+
+}
+
+@media screen and (max-width: 320px) {
+
+    /* nifty */
+    .tabs button {
+        width: 46%;
+    }
+
+    .form-groupcheckbox label,
+    .form-groupp label {
+        font-size: 12px;
+    }
+
+    .buttons .btnn {
+        width: 140px;
+    }
+
+    .btenn {
+        width: 70px;
+    }
+
+    .stats-container {
+        padding: 7px;
+    }
+
+    .containeer {
+        margin: 0;
+    }
+}

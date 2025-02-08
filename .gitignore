@@ -1,0 +1,5 @@
+/vikram_it
+*.log
+*.tmp
+*.pyc
+/__pycache__

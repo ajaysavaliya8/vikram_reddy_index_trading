@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>Login V15</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link rel="icon" href="{{ url_for('static', path='login/images/icons/favicon.ico') }}">
+
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', path='login/css/util.css') }}">
+
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', path='login/css/main.css') }}">
+
+	<style>
+/* General body styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(to bottom, #4facfe, #00f2fe);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Centered container */
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+/* Login box styles */
+.login-box {
+    background: white;
+    padding: 30px;
+    width: 400px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+/* Header styles */
+.login-header {
+    margin-bottom: 20px;
+}
+
+.login-header h1 {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+/* Form styles */
+.login-form .form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.login-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #555;
+}
+
+.login-form input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.3s;
+}
+
+.login-form input:focus {
+    border-color: #4facfe;
+    outline: none;
+}
+
+/* Button styles */
+.login-form .form-actions {
+    text-align: center;
+}
+
+.login-form button {
+    background: #4facfe;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.login-form button:hover {
+    background: #00c1fe;
+}
+
+/* Error message styles */
+.error-message {
+    margin-top: 15px;
+    color: red;
+    font-size: 14px;
+}
+
+	</style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="login-box">
+            <div class="login-header">
+                <h1>Admin Login</h1>
+            </div>
+            <form class="login-form" action="/admin-login" method="post">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit">Login</button>
+                </div>
+                {% if error_message %}
+                <p class="error-message">{{ error_message }}</p>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</body>
+
+</html>

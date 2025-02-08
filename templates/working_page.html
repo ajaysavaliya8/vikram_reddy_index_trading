@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nifty Algo Trading</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='resposive.css') }}">
+
+    <script src="https://unpkg.com/polipop/dist/polipop.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/polipop/dist/css/polipop.core.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/polipop/dist/css/polipop.default.min.css" />
+</head>
+
+<body>
+    <div class="tabs">
+        <div class="scrollmenu">
+            <button class="tab-btn active" data-tab="nifty">Nifty</button>
+            <button class="tab-btn" data-tab="banknifty">Banknifty</button>
+            <button class="tab-btn" data-tab="orderbook">Orderbook</button>
+            <button class="tab-btn" data-tab="logs">Logs</button>
+            <button class="tab-btn" data-tab="trade-settings">Trade Settings</button>
+            <button class="tab-btn" data-tab="settings">Settings</button>
+            <button class="logout">Log out</button>
+        </div>
+    </div>
+
+    <div id="nifty" class="tab-content active">
+ 
+        <div class="form-container">
+
+            <div class="form-group">
+                <label for="nifty-lots">Lots:</label>
+                <input type="number" id="nifty-lots" value="{{ data.nifty_perameter.lot }}" step="1" min="1">
+            </div>
+
+            <div class="form-group">
+                <label for="nifty-expiry">Expiry:</label>
+                <select id="nifty-expiry">
+                    {% for expiry in data.nifty_expiry_list %}
+                    <option value="{{ expiry }}" {% if expiry == data.nifty_expiry %} selected {% endif %}>{{ expiry }} </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="nifty-Take-Primum-Profit-Point">Take Premium Profit Point :</label>
+                <input type="number" id="nifty-Take-Primum-Profit-Point" value="{{ data.nifty_perameter.primum_profit_point }}">
+            </div>
+
+            <div class="form-group">
+                <label for="nifty-max-drawdown">Max Drawdown:</label>
+                <input type="number" id="nifty-max-drawdown" value="{{ data.nifty_perameter.max_drawdown }}">
+            </div>
+
+            <div class="form-group">
+                <label for="nifty-Primum-SL-Activation">Premium Trail SL Activation :</label>
+                <input type="number" id="nifty-Primum-SL-Activation" value="{{ data.nifty_perameter.primum_trail_sl_activation_point }}">
+            </div>
+
+            <div class="form-group">
+                <label for="nifty-ce-strike-distance">CE Strike Distance:</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="number" id="nifty-ce-strike-distance" value="{{ data.nifty_perameter.ce_strike_distance }}" step="50"  min="-600" max="600">
+                        <input type="number"  id="nifty-ce-ltp"  value=""  disabled  aria-label="Nifty CE Strike LTP"  style="border: 0px;">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="nifty-pe-strike-distance">PE Strike Distance:</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="number" id="nifty-pe-strike-distance" value="{{ data.nifty_perameter.pe_strike_distance }}" step="50"  min="-600" max="600">
+                        <input type="number"  id="nifty-pe-ltp"  value=""  disabled  aria-label="Nifty CE Strike LTP"  style="border: 0px;">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="nifty-premium-sl">Premium SL:</label>
+                <input type="number" id="nifty-premium-sl" value="{{ data.nifty_perameter.premium_sl_point }}">
+            </div>
+        </div>
+        <div class="form-groupp">
+            <div class="form-groupcheckbox">
+                <label><input type="checkbox" id="nifty-ce-buy" {% if data.nifty_perameter.CE %}checked{% endif %}
+                        class="large-checkbox"> CE Buy</label>
+                <label><input type="checkbox" id="nifty-pe-buy" {% if data.nifty_perameter.PE %}checked{% endif %}
+                        class="large-checkbox"> PE Buy</label>
+            </div>
+
+            <div class="form-groupp fo_group">
+                <label>Timeframe:</label>
+                <label><input type="radio" name="nifty-timeframe" id="nifty-timeframe-1" value="1" {% if data.nifty_perameter.timeframe=='1' %}checked{% endif %} class="large-radio"> 1 M</label>
+                <label><input type="radio" name="nifty-timeframe" id="nifty-timeframe-3" value="3" {% if data.nifty_perameter.timeframe=='3' %}checked{% endif %} class="large-radio"> 3 M</label>
+                <label><input type="radio" name="nifty-timeframe" id="nifty-timeframe-5" value="5" {% if data.nifty_perameter.timeframe=='5' %}checked{% endif %} class="large-radio"> 5 M</label>
+                <label for="nifty-atm">ATM:</label>
+                <h3  id="nifty-atm"></h3>
+            </div>
+        </div>
+        <div class="status-1">
+            <button class="save-btn"  data-index="nifty" onclick="SaveButton(this)">Save</button>
+        </div>
+
+        <div class="containeer">
+            <div class="buttons">
+                <button class="btnn" style="background-color:#007bff" id="start-button"  data-index="nifty"
+                    onclick="StartButton(this)">Start</button>
+
+                <div class="radio-group">
+                    <input type="radio" id="BREAK" name="nifty-options-type" class="radio-btn"  data-index="BREAK" checked title="Select Break option">
+                    <label for="BREAK" class="btenn">Break</label>
+
+                    <input type="radio" id="MARKET" name="nifty-options-type" class="radio-btn" data-index="MARKET" title="Select Market option">
+                    <label for="MARKET" class="btenn">Market</label>
+                </div>
+    
+                <div class="radio-group">
+                    <input type="radio" id="nifty-50%" name="nifty-sl-options" class="radio-btn" data-index="50%" {% if data.banknifty_perameter.increase_sl_method =='50%' %} checked {% endif %}  title="Select Break option">
+                    <label for="nifty-50%" class="btenn">50% SL</label>
+                    <input type="radio" id="nifty-HL" name="nifty-sl-options" class="radio-btn"  data-index="HL"  {% if data.banknifty_perameter.increase_sl_method =='HL' %} checked {% endif %}  title="Select Break option">
+                    <label for="nifty-HL" class="btenn">H/L SL</label>
+                </div>
+
+                <button class="btnn" style="background-color: #007bff" onclick="IncrementSl(this)"
+                    data-index="nifty">Increment SL</button>
+                <button class="btnn targetmethod" 
+                    style="{% if data.nifty_perameter.tp_type == 'open' %}background-color: #007bff;{% else %}background-color: #c8d6e6;{% endif %}" data-index="nifty" onclick="TargetQtyUpdate(this)" value="open">Open</button>
+
+                <button class="btnn targetmethod"
+                    style="{% if data.nifty_perameter.tp_type == 'partial' %}background-color: #007bff;{% else %}background-color: #c8d6e6;{% endif %}" data-index="nifty" onclick="TargetQtyUpdate(this)" value="partial">Partial</button>
+                <button class="btnn targetmethod"
+                    style="{% if data.nifty_perameter.tp_type == 'full' %}background-color: #007bff;{% else %}background-color: #c8d6e6;{% endif %}" data-index="nifty" onclick="TargetQtyUpdate(this)" value="full">Full</button>
+                    
+                <button class="btnn" style="background-color: rgb(223, 62, 41);" data-index="NIFTY" onclick="SqureOff(this)">Sqr. Off Nifty</button>
+
+            </div>
+        </div>
+        <div class="stats-container">
+            <section class="tableone">
+                <table class="stats-table">
+                    <tr>
+                        <th>Statistic</th>
+                        <th>Value</th>
+                    </tr>
+                    <tr>
+                        <td>Current State:</td>
+                        <td id="nifty-Current State"> {% if data.nifty_table_details %}{{
+                            data.nifty_table_details['Current_State'] }}{% endif %} </td>
+                    </tr>
+                    <tr>
+                        <td>Entered Symbol:</td>
+                        <td id="nifty-Entered Symbol"> {% if data.nifty_table_details %}{{ data.nifty_table_details['Entered Symbol']}}{% endif %} </td>
+                    </tr>
+                    <tr>
+                        <td>Entered Price:</td>
+                        <td id="nifty-Entered Price"> {% if data.nifty_table_details %}{{ data.nifty_table_details['Entered
+                            Price'] }}{% endif %} </td>
+                    </tr>
+                    <tr>
+                        <td>Entered Qty:</td>
+                        <td id="nifty-Entered Qty"> {% if data.nifty_table_details %}{{ data.nifty_table_details['Entered Qty'] }}{% endif %} </td>
+                    </tr>
+                    <tr>
+                        <td>Remaining Qty:</td>
+                        <td id="nifty-Remaining Qty"> {% if data.nifty_table_details %}{{ data.nifty_table_details['Remaining
+                            Qty'] }}{% endif %} </td>
+                    </tr>
+                    <tr>
+                        <td>LTP:</td>
+                        <td id="nifty-LTP"> {% if data.nifty_table_details %}{{ data.nifty_table_details['LTP'] }}{% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Running P&L:</td>
+                        <td id="nifty-Running P&L"> {% if data.nifty_table_details %}{{ data.nifty_table_details['Running P&L'] }}{% endif %} </td>
+                    </tr>
+                </table>
+            </section>
+
+            <section class="tabletwo">
+                <table class="stats-table">
+                    <tr>
+                        <th>Statistic</th>
+                        <th>Value</th>
+                    </tr>
+                    <tr>
+                        <td>FUTURE SL:</td>
+                        <td id="nifty-FUTURE SL"> {% if data.nifty_table_details %}{{ data.nifty_table_details['FUTURE SL']
+                            }}{%
+                            endif %} </td>
+                    </tr>
+                    <tr>
+                        <td>Premium TP:</td>
+                        <td id="nifty-PRIMUM TP"> {% if data.nifty_table_details %}{{ data.nifty_table_details['PRIMUM TP']
+                            }}{%
+                            endif %} </td>
+                    </tr>
+                    <tr>
+                        <td>Premium SL:</td>
+                        <td id="nifty-PRIMUM SL"> {% if data.nifty_table_details %}{{ data.nifty_table_details['PRIMUM SL']
+                            }}{%
+                            endif %} </td>
+                    </tr>
+                    <tr>
+                        <td>TP Type:</td>
+                        <td id="nifty-TP Type">{{ data.nifty_perameter.target_qty_method }}</td>
+                    </tr>
+                    <tr>
+                        <td>SL Type:</td>
+                        <td id="nifty-SL Type">{{ data.nifty_perameter.increase_sl_method }}</td>
+                    </tr>
+                    <tr>
+                        <td>Entry Type:</td>
+                        <td id="nifty-Entry Type"> {{ data.nifty_perameter.start_method }} </td>
+                    </tr>
+                    <tr>
+                        <td>Booked P&L:</td>
+                        <td id="nifty-booked-pl">{{ booked_pl.nifty }}</td>
+                    </tr>
+                </table>
+            </section>
+        </div>
+    </div>
+    {# </div> #}
+
+
+    <div id="banknifty" class="tab-content">
+
+        <div class="form-container">
+
+            <div class="form-group">
+                <label for="banknifty-lots">Lots:</label>
+                <input type="number" id="banknifty-lots" value="{{ data.banknifty_perameter.lot }}" step="1" min="1">
+            </div>
+
+            <div class="form-group">
+                <label for="banknifty-expiry">Expiry:</label>
+                <select id="banknifty-expiry">
+                    {% for expiry in data.banknifty_expiry_list %}
+                    <option value="{{ expiry }}" {% if expiry == data.banknifty_expiry %} selected {% endif %}>{{ expiry }} </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="banknifty-Take-Primum-Profit-Point">Take Premium Profit Point :</label>
+                <input type="number" id="banknifty-Take-Primum-Profit-Point" value="{{ data.banknifty_perameter.primum_profit_point }}">
+            </div>
+
+            <div class="form-group">
+                <label for="banknifty-max-drawdown">Max Drawdown:</label>
+                <input type="number" id="banknifty-max-drawdown" value="{{ data.banknifty_perameter.max_drawdown }}">
+            </div>
+
+            <div class="form-group">
+                <label for="banknifty-Primum-SL-Activation">Premium Trail SL Activation :</label>
+                <input type="number" id="banknifty-Primum-SL-Activation" value="{{ data.banknifty_perameter.primum_trail_sl_activation_point }}">
+            </div>
+
+            <div class="form-group">
+                <label for="banknifty-ce-strike-distance">CE Strike Distance:</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="number" id="banknifty-ce-strike-distance" value="{{ data.banknifty_perameter.ce_strike_distance }}" step="100"  min="-1200" max="1200">
+                        <input type="number"  id="banknifty-ce-ltp"  value=""  disabled  aria-label="banknifty CE Strike LTP"  style="border: 0px;">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="banknifty-pe-strike-distance">PE Strike Distance:</label>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="number" id="banknifty-pe-strike-distance" value="{{ data.banknifty_perameter.pe_strike_distance }}" step="100" min="-1200" max="1200">
+                        <input type="number"  id="banknifty-pe-ltp"  value=""  disabled  aria-label="BankNifty CE Strike LTP"  style="border: 0px;">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="banknifty-premium-sl">Premium SL:</label>
+                <input type="number" id="banknifty-premium-sl" value="{{ data.banknifty_perameter.premium_sl_point }}">
+            </div>
+        </div>
+        <div class="form-groupp">
+            <div class="form-groupcheckbox">
+                <label><input type="checkbox" id="banknifty-ce-buy" {% if data.banknifty_perameter.CE %}checked{% endif %}
+                        class="large-checkbox"> CE Buy</label>
+                <label><input type="checkbox" id="banknifty-pe-buy" {% if data.banknifty_perameter.PE %}checked{% endif %}
+                        class="large-checkbox"> PE Buy</label>
+            </div>
+
+            <div class="form-groupp fo_group">
+                <label>Timeframe:</label>
+                <label><input type="radio" name="banknifty-timeframe" id="banknifty-timeframe-1" value="1" {% if data.banknifty_perameter.timeframe=='1' %}checked{% endif %} class="large-radio"> 1 M</label>
+                <label><input type="radio" name="banknifty-timeframe" id="banknifty-timeframe-3" value="3" {% if data.banknifty_perameter.timeframe=='3' %}checked{% endif %} class="large-radio"> 3 M</label>
+                <label><input type="radio" name="banknifty-timeframe" id="banknifty-timeframe-5" value="5" {% if data.banknifty_perameter.timeframe=='5' %}checked{% endif %} class="large-radio"> 5 M</label>
+                <label for="banknifty-atm">ATM:</label>
+                <h3  id="banknifty-atm"></h3>
+            </div>
+        </div>
+        <div class="status-1">
+            <button class="save-btn"  data-index="banknifty" onclick="SaveButton(this)">Save</button>
+        </div>
+
+        <div class="containeer">
+            <div class="buttons">
+                <button class="btnn" style="background-color:#007bff" id="start-button" data-index="banknifty"
+                    onclick="StartButton(this)">Start</button>
+
+                <div class="radio-group">
+                    <input type="radio" id="banknifty-BREAK" name="banknifty-options-type" data-index="BREAK" class="radio-btn" checked title="Select Break option">
+                    <label for="banknifty-BREAK" class="btenn">Break</label>
+
+                    <input type="radio" id="banknifty-MARKET" name="banknifty-options-type"  data-index="MARKET" class="radio-btn"
+                        title="Select Market option">
+                    <label for="banknifty-MARKET" class="btenn">Market</label>
+                </div>
+                <div class="radio-group">
+                    <input type="radio" id="banknifty-50%" name="banknifty-sl-options" class="radio-btn" data-index="50%"  {% if data.banknifty_perameter.increase_sl_method =='50%' %} checked {% endif %} title="Select Break option">
+                    <label for="banknifty-50%" class="btenn">50% SL</label>
+                    <input type="radio" id="banknifty-HL" name="banknifty-sl-options" class="radio-btn"  data-index="HL"  {% if data.banknifty_perameter.increase_sl_method =='HL' %} checked {% endif %}   title="Select Break option">
+                    <label for="banknifty-HL" class="btenn">H/L SL</label>
+                </div>
+
+                <button class="btnn" style="background-color: #007bff" onclick="IncrementSl(this)"
+                    data-index="banknifty">Increment SL</button>
+                <button class="btnn targetmethod" 
+                    style="{% if data.banknifty_perameter.tp_type == 'open' %}background-color: #007bff;{% else %}background-color: #c8d6e6;{% endif %}" data-index="banknifty" onclick="TargetQtyUpdate(this)" value="open">Open</button>
+
+                <button class="btnn targetmethod"
+                    style="{% if data.banknifty_perameter.tp_type == 'partial' %}background-color: #007bff;{% else %}background-color: #c8d6e6;{% endif %}" data-index="banknifty" onclick="TargetQtyUpdate(this)" value="partial">Partial</button>
+                <button class="btnn targetmethod"
+                    style="{% if data.banknifty_perameter.tp_type == 'full' %}background-color: #007bff;{% else %}background-color: #c8d6e6;{% endif %}" data-index="banknifty" onclick="TargetQtyUpdate(this)" value="full">Full</button>
+                    
+                <button class="btnn" style="background-color: rgb(223, 62, 41) ;" data-index="BANKNIFTY" onclick="SqureOff(this)">Sqr.Off BNifty</button>
+
+            </div>
+        </div>
+        <div class="stats-container">
+            <section class="tableone">
+                <table class="stats-table">
+                    <tr>
+                        <th>Statistic</th>
+                        <th>Value</th>
+                    </tr>
+                    <tr>
+                        <td>Current State:</td>
+                        <td id="banknifty-Current State"> {% if data.banknifty_table_details %}{{ data.banknifty_table_details['Current_State'] }}{% endif %} </td>
+                    </tr>
+                    <tr>
+                        <td>Entered Symbol:</td>
+                        <td id="banknifty-Entered Symbol"> {% if data.banknifty_table_details %}{{ data.banknifty_table_details['Entered Symbol']}}{% endif %} </td>
+                    </tr>
+                    <tr>
+                        <td>Entered Price:</td>
+                        <td id="banknifty-Entered Price"> {% if data.banknifty_table_details %}{{ data.banknifty_table_details['Entered Price'] }}{% endif %} </td>
+                    </tr>
+                    <tr>
+                        <td>Entered Qty:</td>
+                        <td id="banknifty-Entered Qty"> {% if data.banknifty_table_details %}{{ data.banknifty_table_details['Entered Qty']}}{% endif %} </td>
+                    </tr>
+                    <tr>
+                        <td>Remaining Qty:</td>
+                        <td id="banknifty-Remaining Qty"> {% if data.banknifty_table_details %}{{ data.banknifty_table_details['Remaining Qty'] }}{% endif %} </td>
+                    </tr>
+                    <tr>
+                        <td>LTP:</td>
+                        <td id="banknifty-LTP"> {% if data.banknifty_table_details %}{{ data.banknifty_table_details['LTP'] }}{% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Running P&L:</td>
+                        <td id="banknifty-Running P&L"> {% if data.banknifty_table_details %}{{ data.banknifty_table_details['Running P&L'] }}{% endif %} </td>
+                    </tr>
+                </table>
+            </section>
+
+            <section class="tabletwo">
+                <table class="stats-table">
+                    <tr>
+                        <th>Statistic</th>
+                        <th>Value</th>
+                    </tr>
+                    <tr>
+                        <td>FUTURE SL:</td>
+                        <td id="banknifty-FUTURE SL"> {% if data.banknifty_table_details %}{{ data.banknifty_table_details['FUTURE SL']
+                            }}{%
+                            endif %} </td>
+                    </tr>
+                    <tr>
+                        <td>Premium TP:</td>
+                        <td id="banknifty-PRIMUM TP"> {% if data.banknifty_table_details %}{{ data.banknifty_table_details['PRIMUM TP']
+                            }}{%
+                            endif %} </td>
+                    </tr>
+                    <tr>
+                        <td>Premium SL:</td>
+                        <td id="banknifty-PRIMUM SL"> {% if data.banknifty_table_details %}{{ data.banknifty_table_details['PRIMUM SL']
+                            }}{%
+                            endif %} </td>
+                    </tr>
+                    <tr>
+                        <td>TP Type:</td>
+                        <td id="banknifty-TP Type">{{ data.banknifty_perameter.target_qty_method }}</td>
+                    </tr>
+                    <tr>
+                        <td>SL Type:</td>
+                        <td id="banknifty-SL Type">{{ data.banknifty_perameter.increase_sl_method }}</td>
+                    </tr>
+                    <tr>
+                        <td>Entry Type:</td>
+                        <td id="banknifty-Entry Type"> {{ data.banknifty_perameter.start_method }} </td>
+                    </tr>
+                    <tr>
+                        <td>Booked P&L:</td>
+                        <td id="banknifty-booked-pl">{{ booked_pl.banknifty }}</td>
+                    </tr>
+                </table>
+            </section>
+        </div>
+
+
+    </div>
+
+    <div id="logs" class="tab-content">
+        <textarea id="logs-area" class="textarea" aria-label="logs-area" disabled style="line-height: 1.8;">Some text...</textarea>
+    </div>
+
+    <div id="trade-settings" class="tab-content">
+        <div class="container">
+            <div class="card">
+                <p class="status stopped" , id="broker-server-status">Refresh Status or Connect to Broker API</p>
+                <div class="buttons butttt">
+                    <button class="btn " onclick="CheckBrokerStatus()">Refresh</button>
+                    <button class="btn" onclick="ConnectToBroker()">Start</button>
+                    <button class="btn " onclick="StopBroker()">Stop</button>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="container">
+            <div class="form-card">
+
+                <form>
+                    <div class="form-group">
+                        <label for="broker-trade-limit">Trade Limit:</label>
+                        <input type="number" id="broker-trade-limit" value="{{ trade_limit }}" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="broker-trading-mode">Trading Mode:</label>
+                        <select id="broker-trading-mode">
+                            <option value="LIVE" {% if tradingmode_limit=="LIVE" %}selected{% endif %}>Live
+                            </option>
+                            <option value="DEMO" {% if tradingmode_limit=="DEMO" %}selected{% endif %}>Demo
+                            </option>
+                        </select>
+                    </div>
+                    <button type="button" class="save-btn" id="daily-trading-settings">Save</button>
+                </form>
+
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="form-card">
+                <form>
+                    <div class="form-group">
+                        <label for="broker-selection">Broker:</label>
+                        <select id="broker-selection">
+                            <option value="fyers" {% if broker=="fyers" %}selected{% endif %}>Fyers</option>
+                            <option value="angleone" {% if broker=="angleone" %}selected{% endif %}>AngleOne</option> 
+                            <option value="shoonya" {% if broker=="shoonya" %}selected{% endif %}>Shoonya</option>
+                        </select>
+                    </div>
+                    <button type="button" class="save-btn" id="update-broker">Save</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="settings" class="tab-content">
+            <div class="container">
+                <div class="form-card">
+                    <div class="broker-icons">
+                        <img src="{{ url_for('static', path='fyers.png') }}" class="broker-logo" data-broker="fyers" alt="Fyers">
+                        <img src="{{ url_for('static', path='angleone.png') }}" class="broker-logo" data-broker="angel" alt="Angel Broking">
+                        <img src="{{ url_for('static', path='shoonya.png') }}" class="broker-logo" data-broker="shoonya" alt="Shoonya">
+                    </div>
+                    <form id="broker-form">
+                        <div id="fyers-form" class="broker-form" style="display: block;">
+                            <h3 style="color: white;">Fyers Credentials</h3>
+
+                            <div class="form-group">
+                                <label for="fyers-api-key">API KEY:</label>
+                                <input type="text" id="fyers-api-key" value="{{ broker_config.fyers_apiKey }}" />
+                            </div>
+                            <div class="form-group">
+                                <label for="fyers-secret-key">SECRET KEY:</label>
+                                <input type="text" id="fyers-secret-key" value="{{ broker_config.fyers_secretKey }}" />
+                            </div>
+                            <div class="form-group">
+                                <label for="fyers-redirect-url">REDIRECT URL:</label>
+                                <input type="text" id="fyers-redirect-url" value="{{ broker_config.fyers_redirectUrl }}" />
+                            </div>
+                            <div class="form-group">
+                                <label for="fyers-grant-type">GRANT TYPE:</label>
+                                <input type="text" id="fyers-grant-type" value="{{ broker_config.fyers_grantType }}" />
+                            </div>
+                            <div class="form-group">
+                                <label for="fyers-response-type">RESPONSE TYPE:</label>
+                                <input type="text" id="fyers-response-type" value="{{ broker_config.fyers_responseType }}" />
+                            </div>
+                            <button type="button" class="save-btn"  id="save-broker-confing" onclick="SaveBrokerConfig(this)" data-index="fyers">Save</button>
+                        </div>
+
+                        <div id="angel-form" class="broker-form" style="display: none;">
+                            <h3 style="color: white;">Angel Broking Credentials</h3>
+                            <div class="form-group">
+                                <label for="angle-userid">User ID:</label>
+                                <input type="text" id="angle-userid" value="{{ broker_config.angle_user_id }}" />
+                            </div>
+                            <div class="form-group">
+                                <label for="angle-apiKey">Api Key:</label>
+                                <input type="text" id="angle-apikey" value="{{ broker_config.angle_api_key }}" />
+                            </div>
+                            <div class="form-group">
+                                <label for="angle-secretKey">Secret Key:</label>
+                                <input type="text" id="angle-secretKey" value="{{ broker_config.angle_secretKey }}" />
+                            </div>
+                            <div class="form-group">
+                                <label for="angle-totp">Totp Code:</label>
+                                <input type="text" id="angle-totp" value="{{ broker_config.angle_totp }}" />
+                            </div>
+                            <div class="form-group">
+                                <label for="angle-pin">Pin:</label>
+                                <input type="text" id="angle-pin" value="{{ broker_config.angle_pin }}" />
+                            </div>
+                                <button type="button" class="save-btn"  id="save-broker-confing" onclick="SaveBrokerConfig(this)" data-index="angleone">Save</button>
+
+                        </div>
+                        <div id="shoonya-form" class="broker-form" style="display: none;">
+                            <h3 style="color: white;">Shoonya Credentials</h3>
+                            <div class="form-group">
+                                <label for="shoonya-userid">UserID:</label>
+                                <input type="text" id="shoonya-userid" value="{{ broker_config.shoonya_user_id }}" />
+                            </div>
+                            <div class="form-group">
+                                <label for="shoonya-password">Password:</label>
+                                <input type="text" id="shoonya-password" value="{{ broker_config.shoonya_password }}" />
+                            </div>
+                            <div class="form-group">
+                                <label for="shoonya-api_key">Api Key:</label>
+                                <input type="text" id="shoonya-api_key" value="{{ broker_config.shoonya_api_key }}" />
+                            </div>
+                            <div class="form-group">
+                                <label for="shoonya-twofa">TwoFA:</label>
+                                <input type="text" id="shoonya-twofa" value="{{ broker_config.shoonya_twofa }}" />
+                            </div>
+                            <div class="form-group">
+                                <label for="shoonya-vendor_code">Vendor Code:</label>
+                                <input type="text" id="shoonya-vendor_code" value="{{ broker_config.shoonya_vendor_code }}" />
+                            </div>
+                            <div class="form-group">
+                                <label for="shoonya-imei">IMEI:</label>
+                                <input type="text" id="shoonya-imei" value="{{ broker_config.shoonya_imei }}" />
+                            </div>
+
+                            <button type="button" class="save-btn"  id="save-broker-confing" onclick="SaveBrokerConfig(this)" data-index="shoonya">Save</button>
+                        </div>
+                    </form> 
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .broker-icons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            border-color: red;
+        }
+        .broker-logo {
+            width: 100px;
+            height: 100px;
+            margin: 0 15px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .broker-logo:hover {
+            transform: scale(1.1);
+        }
+        .broker-form {
+            display: none;
+        }
+    </style>
+<script>
+    document.querySelectorAll('.broker-logo').forEach(img => {
+        img.addEventListener('click', function() {
+            let broker = this.dataset.broker;
+            
+            // Hide all forms
+            document.querySelectorAll('.broker-form').forEach(form => form.style.display = 'none');
+            
+            // Show selected broker form
+            document.getElementById(broker + '-form').style.display = 'block';
+        });
+    });
+</script>
+
+    <div id="orderbook" class="tab-content">
+        <div style="overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Type</th>
+                        <th>Instrument</th>
+                        <th>Qty.</th>
+                        <th>Avg. price</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+    
+                <tbody>
+                </tbody>    
+        </div>
+    </div>
+ 
+
+    <script>
+        async function CheckBrokerStatus() {
+            try {
+                const response = await fetch('/get-server-status');
+                if (!response.ok) {
+                    document.getElementById('broker-server-status').textContent = "Retry Please";
+                    document.getElementById('broker-server-status').style.color = '#F2518D';
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const data = await response.json();
+                //console.log(data);
+                document.getElementById('broker-server-status').textContent = data['message'];
+                document.getElementById('broker-server-status').style.color = 'green';
+                pp.add({ type: 'success', title: 'Fyers Server Status', content: 'Server alive.', });
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                pp.add({ type: 'error', title: 'Server Status', content: 'Error in server, try to reconnect' });
+                document.getElementById('broker-server-status').textContent = "Not Connected to Broker API";
+            }
+        }
+
+        async function ConnectToBroker() {
+            pp.add({ type: 'info', title: 'Login Processing', content: 'Please Wait 10 Seconds for Approval' });
+            
+            try {
+                const response = await fetch("/connect-to-broker", {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    redirect: "follow"  // Ensures redirection is handled properly
+                });
+        
+                console.log("Response Status:", response.status);
+                console.log("Response Redirected:", response.redirected);
+                console.log("Response URL:", response.url);
+        
+                if (response.redirected) {
+                    // ✅ Redirect the user manually
+                    window.location.href = response.url;
+                    return;  // Stop further execution after redirect
+                }
+        
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log("Result:", result);
+                    pp.add({ type: 'success', title: 'Server Status', content: 'Broker server is connected.' });
+                } else if (response.status === 400) {
+                    const errorData = await response.json();
+                    pp.add({ type: 'error', title: 'Server Status', content: errorData.detail });
+                    console.error("Error:", errorData);
+                } else {
+                    pp.add({ type: 'error', title: 'Server Status', content: 'Failed to check server status.' });
+                    console.error("Unexpected error");
+                }
+            } catch (error) {
+                console.error("Fetch Error:", error);
+                pp.add({ type: 'error', title: 'Server Status', content: 'Failed to check server status.' });
+            }
+        }
+
+
+ 
+        async function StopBroker() {
+            try {
+                    const response = await fetch('/stop-broker');
+                    if (!response.ok) {
+                        document.getElementById('broker-server-status').textContent = "Retry Please";
+                        document.getElementById('broker-server-status').style.color = '#F2518D';
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    //console.log(data);
+                    document.getElementById('broker-server-status').textContent = data['message'];
+                    document.getElementById('broker-server-status').style.color = 'green';
+                    pp.add({ type: 'success', title: 'Fyers Server Status', content: data['message'] });
+                } catch (error) {
+                    console.error("Error fetching data:", error);
+                    pp.add({ type: 'error', title: 'Server Status', content: 'Somthing Wrong' });
+                    document.getElementById('broker-server-status').textContent = "Somthing Wrong";
+                }
+            }
+        
+
+        async function SaveBrokerConfig(button) {
+            const broker = button.getAttribute("data-index");
+            
+            if (broker =="fyers") {
+                payload = {
+                    broker :broker ,
+                    apiKey: document.getElementById("fyers-api-key").value,
+                    secretKey: document.getElementById("fyers-secret-key").value,
+                    redirectUrl: document.getElementById("fyers-redirect-url").value,
+                    grantType: document.getElementById("fyers-grant-type").value,
+                    responseType: document.getElementById("fyers-response-type").value,                    
+                }
+            } else if (broker =="angleone"){
+                payload = {
+                    broker :broker , 
+                    user_id : document.getElementById("angle-userid").value,
+                    api_key : document.getElementById("angle-apikey").value,
+                    secretKey : document.getElementById("angle-secretKey").value,
+                    totp : document.getElementById("angle-totp").value,
+                    pin : document.getElementById("angle-pin").value,
+                }
+                
+            } else if (broker == "shoonya"){
+                payload = {
+                    broker :broker , 
+                    user_id : document.getElementById("shoonya-userid").value,
+                    password : document.getElementById("shoonya-password").value,
+                    api_key : document.getElementById("shoonya-api_key").value,
+                    twofa : document.getElementById("shoonya-twofa").value,
+                    vendor_code : document.getElementById("shoonya-vendor_code").value,
+                    imei : document.getElementById("shoonya-imei").value,
+                }
+            }
+            
+            console.log(payload);
+
+            try {
+                const response = await fetch("/api/save-broker-config", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    pp.add({ type: 'success', title: 'Broker Details', content: 'Form submitted successfully' });
+                    console.log(result);
+                } else {
+                    pp.add({ type: 'error', title: 'Broker Details', content: 'Error in submitting form.' });
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                pp.add({ type: 'error', title: 'Broker Details', content: 'Failed to submit form.' });
+            }
+        }
+
+        document.getElementById("daily-trading-settings").addEventListener("click", async function () {
+            // Get the values from the form fields
+            const tradeLimit = document.getElementById("broker-trade-limit").value;
+            const tradingMode = document.getElementById("broker-trading-mode").value;
+
+            // Validate if trade limit is a valid number
+            if (isNaN(tradeLimit) || tradeLimit <= 0) {
+                alert("Please enter a valid trade limit.");
+                return;
+            }
+
+            const data = {
+                limit: tradeLimit,
+                tradingmode: tradingMode
+            };
+            console.log(data);
+
+            try {
+                const response = await fetch("/api/save-tradingmode-limit-config", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    // If the response is not OK, try to parse the error message
+                    const errorData = await response.json();
+                    throw new Error(`Error ${response.status}: ${errorData.detail || "Unknown error"}`);
+                }
+
+                // If the request is successful
+                const result = await response.json();
+                pp.add({ type: 'success', title: result.heading, content: result.msg });
+
+            } catch (error) {
+                console.error("Error:", error.message);
+                pp.add({ type: 'error', title: "TradingLimit", content: error.message });
+            }
+        });
+
+        document.getElementById("update-broker").addEventListener("click", async function () {
+    
+            const broker = document.getElementById("broker-selection").value;
+            const data = { broker: broker };
+            console.log(data);
+
+            try {
+                const response = await fetch("/api/update-broker", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.log(errorData);
+                    pp.add({ type: 'error', title: "Updating Broker", content: errorData.detail });
+                }
+                const result = await response.json();
+                pp.add({ type: 'success', title: result.heading, content: result.msg });
+
+            } catch (error) {
+                console.error("Error:", error.message);
+                //pp.add({ type: 'error', title: "Updating Broker", content: error.message });
+            }
+        });
+
+        document.querySelector(".logout").addEventListener("click", function () {
+            fetch("/logout", {
+                method: "GET",
+                credentials: "same-origin"  // Ensures cookies are sent with the request
+            })
+                .then(response => {
+                    if (response.redirected) {
+                        // Redirect user to the login page after logout
+                        window.location.href = response.url;
+                    }
+                })
+                .catch(error => {
+                    console.error("Logout failed:", error);
+                    pp.add({ type: 'error', title: 'LogOut Problem', content: error });
+
+                });
+        });
+
+    </script>
+
+
+    <script>
+
+        async function SaveButton(button) {
+            const index = button.getAttribute("data-index");
+            try {
+
+                console.log(document.getElementById(`${index.toLowerCase()}-ce-buy`).checked);
+                const formData = {
+                    index: index.toUpperCase(),
+                    lots: document.getElementById(`${index.toLowerCase()}-lots`).value,
+                    expiry: document.getElementById(`${index.toLowerCase()}-expiry`).value,
+                    takeProfit: document.getElementById(`${index.toLowerCase()}-Take-Primum-Profit-Point`).value,
+                    maxDrawdown: document.getElementById(`${index.toLowerCase()}-max-drawdown`).value,
+                    primum_trail_sl_activation_point: document.getElementById(`${index.toLowerCase()}-Primum-SL-Activation`).value,
+                    CEstrikeDistance: document.getElementById(`${index.toLowerCase()}-ce-strike-distance`).value,
+                    PEstrikeDistance: document.getElementById(`${index.toLowerCase()}-pe-strike-distance`).value,
+                    premiumSL: document.getElementById(`${index.toLowerCase()}-premium-sl`).value,
+                    ceBuy: document.getElementById(`${index.toLowerCase()}-ce-buy`).checked,
+                    peBuy: document.getElementById(`${index.toLowerCase()}-pe-buy`).checked,
+                    timeframe: document.querySelector(`input[name='${index.toLowerCase()}-timeframe']:checked`).value
+                };
+                //console.log(formData);
+
+                const response = await fetch("/submit-values", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json(); // Await JSON response
+                    pp.add({ type: 'success', title: `${index.toLowerCase()} Form`, content: `${index.toLowerCase()} Form submitted successfully!` });
+
+                    if (result.message == "clear OldData") {
+                        document.getElementById(`${index.toLowerCase()}-Current State`).textContent = "";
+                        document.getElementById(`${index.toLowerCase()}-Entered Symbol`).textContent = "";
+                        document.getElementById(`${index.toLowerCase()}-Entered Price`).textContent = "";
+                        document.getElementById(`${index.toLowerCase()}-Entered Qty`).textContent = "";
+                        document.getElementById(`${index.toLowerCase()}-Remaining Qty`).textContent = "";
+                        document.getElementById(`${index.toLowerCase()}-LTP`).textContent = "";
+                        document.getElementById(`${index.toLowerCase()}-Running P&L`).textContent = "";
+                        document.getElementById(`${index.toLowerCase()}-FUTURE SL`).textContent = "";
+                        document.getElementById(`${index.toLowerCase()}-PRIMUM TP`).textContent = "";
+                        document.getElementById(`${index.toLowerCase()}-PRIMUM SL`).textContent = "";
+                        document.getElementById(`${index.toLowerCase()}-ce-ltp`).textContent = "";
+                        document.getElementById(`${index.toLowerCase()}-pe-ltp`).textContent = "";
+                    }
+                    document.getElementById(`${index.toLowerCase()}-Entry Type`).textContent = document.querySelector(`input[name="${index.toLowerCase()}-options-type"]:checked`).id;
+                } else {
+                    const result = await response.json(); // Await error response
+                    console.log(result.detail[0].msg );
+                    pp.add({ type: 'error', title: `${index.toLowerCase()} Form`, content: result.detail[0].msg });
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                pp.add({ type: 'error', title: `${index.toLowerCase()} Form`, content: "Failed to submit form. Please Check Values." });
+            }
+        }
+
+
+        async function StartButton(button) {
+            const index = button.getAttribute("data-index");
+            const selectedOption = document.querySelector(`input[name="${index.toLowerCase()}-options-type"]:checked`)?.getAttribute('data-index');
+            console.log(index);
+
+            if (!selectedOption) {
+                pp.add({ type: 'error', title: `${index.toUpperCase()} Process`, content: 'Please select an option before starting.' });
+                return;
+            }
+
+            const data = { option: selectedOption, index: index.toUpperCase() };
+
+            try {
+                const response = await fetch(`/start`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Error ${response.status}: ${errorData.detail || "Unknown error"}`);
+                }
+
+                const result = await response.json();
+                console.log("Success:", selectedOption);
+                pp.add({ type: 'success', title: `${index.toLowerCase()} Process`, content: `${index.toLowerCase()} Process Started.` });
+            } catch (error) {
+                console.error("Error:", error.message);
+                pp.add({ type: 'error', title: `${index.toLowerCase()} Process`, content: error.message });
+            }
+        }
+
+
+        async function IncrementSl(button) {
+            const index = button.getAttribute("data-index");
+            const selectedOption = document.querySelector(`input[name="${index.toLowerCase()}-sl-options"]:checked`).getAttribute("data-index");
+
+            const data = { option: selectedOption , index: index.toUpperCase() };
+
+            fetch(`/increment-sl`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(errorData => {
+                            throw new Error(`Error ${response.status}: ${errorData.detail || "Unknown error"}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    pp.add({ type: 'success', title: `${index.toLowerCase()} Increment SL`, content: `${index.toLowerCase()} Increment SL successfully.`, });
+                })
+                .catch(error => {
+                    pp.add({ type: 'error', title: `${index.toLowerCase()} Increment SL`, content: error.message });
+                });
+        }
+
+        async function TargetQtyUpdate(button) {
+            const index = button.getAttribute("data-index");
+            const value = button.value;
+            const baseURL = `${window.location.origin}/`;
+            const url = `${baseURL}TargetQtyUpdate`;
+
+            const data = { option: value, index: index.toUpperCase() };
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST', // Explicitly use POST
+                    headers: {
+                        'Content-Type': 'application/json', // Set Content-Type to JSON
+                    },
+                    body: JSON.stringify(data), // Send the data in the body
+                });
+
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+
+                const responseData = await response.json();
+                console.log(responseData);
+
+                document.getElementById(`${index.toLowerCase()}-TP Type`).textContent = value;
+
+                pp.add({
+                    type: 'success',
+                    title: 'Target and Qty Update',
+                    content: 'Target and Qty Updated successfully.',
+                });
+
+                document.querySelectorAll('.targetmethod').forEach((element) => {
+                    element.style.backgroundColor = "#c8d6e6";
+                });
+
+                button.style.backgroundColor = "#007bff";
+            } catch (error) {
+                pp.add({
+                    type: 'error',
+                    title: 'Target and Qty Update',
+                    content: error.message,
+                });
+            }
+        }
+                
+        async function SqureOff(button) {
+            const index = button.getAttribute('data-index'); // Extract the index (NIFTY/BANKNIFTY) from the button
+            const baseURL = `${window.location.origin}/`; // Automatically sets the base URL
+            const url = `${baseURL}SqureOff?index=${index}`; // Simplified URL with query parameter
+
+            console.log(`Requesting Square Off for ${index}: ${url}`);
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to square off ${index}: ${await response.text()}`);
+                }
+
+                const data = await response.json(); // Parse the response
+                console.log(data);
+
+                document.getElementById(`${index.toLowerCase()}-Current State`).textContent = data.form_msg["Current_State"];
+                document.getElementById(`${index.toLowerCase()}-Entered Symbol`).textContent = data.form_msg["Entered Symbol"];
+                document.getElementById(`${index.toLowerCase()}-Entered Price`).textContent = data.form_msg["Entered Price"];
+                document.getElementById(`${index.toLowerCase()}-Entered Qty`).textContent = data.form_msg["Entered Qty"];
+                document.getElementById(`${index.toLowerCase()}-Remaining Qty`).textContent = data.form_msg["Remaining Qty"];
+                document.getElementById(`${index.toLowerCase()}-LTP`).textContent = data.form_msg["LTP"];
+                document.getElementById(`${index.toLowerCase()}-Running P&L`).textContent = data.form_msg["Running P&L"];
+                document.getElementById(`${index.toLowerCase()}-FUTURE SL`).textContent = data.form_msg["FUTURE SL"];
+                document.getElementById(`${index.toLowerCase()}-PRIMUM TP`).textContent = data.form_msg["PRIMUM TP"];
+                document.getElementById(`${index.toLowerCase()}-PRIMUM SL`).textContent = data.form_msg["PRIMUM SL"];
+                document.getElementById(`${index.toLowerCase()}-TP Type`).textContent = data.form_msg["TP Type"];
+                document.getElementById(`${index.toLowerCase()}-SL Type`).textContent = data.form_msg["SL Type"];
+                document.getElementById(`${index.toLowerCase()}-Entry Type`).textContent = data.form_msg["Entry Type"];
+                document.getElementById(`${index.toLowerCase()}-booked-pl`).textContent = data.form_msg["Booked P&L"];
+                document.getElementById(`${index.toLowerCase()}-ce-ltp`).value = data.form_msg["ce_ltp"];
+                document.getElementById(`${index.toLowerCase()}-pe-ltp`).value = data.form_msg["pe_ltp"];
+
+                pp.add({
+                    type: 'success',
+                    title: `SquareOff ${index}`,
+                    content: data.message,
+                });
+            } catch (error) {
+                // Show error notification
+                pp.add({
+                    type: 'error',
+                    title: `SquareOff ${index}`,
+                    content: error.message,
+                });
+                console.error(`Error during SquareOff for ${index}:`, error);
+            }
+        }
+
+    </script>
+
+
+
+    <!-- notification part -->
+    <script>
+        let pp;
+        let pp4;
+        let pp2;
+        const selector = 'mypolipop';
+
+        const options4 = {
+            layout: 'popups',
+            position: 'top-right',
+            theme: 'default',
+            icons: true,
+            insert: 'before',
+            pool: 0,
+            sticky: false,
+            pauseOnHover: true,
+            life: 4000,
+            progressbar: true,
+            effect: 'slide',
+            easing: 'ease-in-out',
+        };
+        const options2 = {
+            layout: 'popups',
+            position: 'top-right',
+            theme: 'default',
+            icons: true,
+            insert: 'before',
+            pool: 0,
+            sticky: false,
+            pauseOnHover: true,
+            life: 2000,
+            progressbar: true,
+            effect: 'slide',
+            easing: 'ease-in-out',
+        };
+
+        function initPolipop(selector, options) {
+            if (document.querySelector(selector))
+                document.querySelector(selector).remove();
+
+            pp = new Polipop(selector, options4);
+            pp4 = new Polipop(selector, options4);
+            pp2 = new Polipop(selector, options2);
+        }
+
+        initPolipop(selector, options4);
+        initPolipop(selector, options2);
+
+    </script>
+
+    <!-- websocket  -->
+    <script>
+         let socket;
+        let isConnected = false;
+        let token = ""; // Replace this with your JWT token fetching logic
+        const reconnectDelay = 2000; // Set 2-second delay for reconnection attempts
+
+        function getWebSocketBaseUrl() {
+            const isSecure = window.location.protocol === "https:";
+            const host = window.location.host; // Includes hostname and port
+            return `${isSecure ? "wss" : "ws"}://${host}`;
+        }
+
+        function getTokenFromCookie() {
+            const cookie = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('Authorization='))
+                ?.split('=')[1];
+            return cookie ? cookie.replace(/^"|"$/g, '') : null;
+        }
+
+        async function connectWebSocket() {
+            try {
+                // Fetch the token from the cookie or wherever you store it
+                token = getTokenFromCookie();
+
+                if (!token) {
+                    console.error("JWT token not found in cookies.");
+                    return;
+                }
+
+                const socketBaseUrl = getWebSocketBaseUrl();
+                const socketUrl = `${socketBaseUrl}/ws?token=${encodeURIComponent(token)}`;
+                console.log(`Connecting to WebSocket: ${socketUrl}`);
+
+                socket = new WebSocket(socketUrl);
+
+                // Wrap event listeners in promises for async handling
+                const openPromise = new Promise((resolve, reject) => {
+                    socket.onopen = () => {
+                        console.log("WebSocket connected!");
+                        isConnected = true;
+                        resolve();
+                    };
+
+                    socket.onerror = (error) => {
+                        console.error("WebSocket error:", error);
+                        isConnected = false;
+                        reject(error);
+                    };
+                });
+
+                // Await the connection opening
+                await openPromise;
+
+                // Handle incoming messages from WebSocket
+                socket.onmessage = async (event) => {
+                    try {
+                        // Step 1: Parse the outer JSON
+                        const outerData = JSON.parse(event.data);
+                        
+                        // Step 2: Access the nested "message" string and perform transformations on it
+                        console.log("----------");
+                        let innerMessage = outerData.message;
+                        console.log(innerMessage);
+
+                          // Replace single quotes with double quotes
+//                        innerMessage = innerMessage.replace(/'/g, "\"");
+
+                        // Replace Python-style `None` with JavaScript `null`
+//                        innerMessage = innerMessage.replace(/\bNone\b/g, "null");
+
+                        // Remove `np.int64` and `np.float64` wrappers
+//                        innerMessage = innerMessage.replace(/np\.int64\((\d+)\)/g, "$1");
+//                        innerMessage = innerMessage.replace(/np\.float64\(([-\d.]+)\)/g, "$1"); -->
+
+                        // Step 3: Parse the cleaned-up inner message as JSON
+//                        const parsedInnerMessage = JSON.parse(innerMessage);
+//                        console.log("-------------------------------------------");
+//                        console.log(parsedInnerMessage);
+                        const parsedInnerMessage = innerMessage; 
+
+                        if (innerMessage.display === "table") {
+                                const index = parsedInnerMessage.msg['index'].toLowerCase(); // Extract the index (NIFTY/BANKNIFTY) from the button
+                                //console.log(index);
+                            //if (parsedInnerMessage.msg['index'] === "NIFTY") {
+                                document.getElementById(`${index.toLowerCase()}-Current State`).textContent = parsedInnerMessage.msg["Current_State"];
+                                document.getElementById(`${index.toLowerCase()}-Entered Symbol`).textContent = parsedInnerMessage.msg["Entered Symbol"];
+                                document.getElementById(`${index.toLowerCase()}-Entered Price`).textContent = parsedInnerMessage.msg["Entered Price"];
+                                document.getElementById(`${index.toLowerCase()}-Entered Qty`).textContent = parsedInnerMessage.msg["Entered Qty"];
+                                document.getElementById(`${index.toLowerCase()}-Remaining Qty`).textContent = parsedInnerMessage.msg["Remaining Qty"];
+                                document.getElementById(`${index.toLowerCase()}-LTP`).textContent = parsedInnerMessage.msg["LTP"];
+                                document.getElementById(`${index.toLowerCase()}-Running P&L`).textContent = parsedInnerMessage.msg["Running P&L"];
+                                document.getElementById(`${index.toLowerCase()}-FUTURE SL`).textContent = parsedInnerMessage.msg["FUTURE SL"];
+                                document.getElementById(`${index.toLowerCase()}-PRIMUM TP`).textContent = parsedInnerMessage.msg["PRIMUM TP"];
+                                document.getElementById(`${index.toLowerCase()}-PRIMUM SL`).textContent = parsedInnerMessage.msg["PRIMUM SL"];
+                                document.getElementById(`${index.toLowerCase()}-TP Type`).textContent = parsedInnerMessage.msg["TP Type"];
+                                document.getElementById(`${index.toLowerCase()}-SL Type`).textContent = parsedInnerMessage.msg["SL Type"];
+                                document.getElementById(`${index.toLowerCase()}-Entry Type`).textContent = parsedInnerMessage.msg["Entry Type"];
+                                document.getElementById(`${index.toLowerCase()}-booked-pl`).textContent = parsedInnerMessage.msg["Booked P&L"];
+                                document.getElementById(`${index.toLowerCase()}-ce-ltp`).value = parsedInnerMessage.msg["ce_ltp"];
+                                document.getElementById(`${index.toLowerCase()}-pe-ltp`).value = parsedInnerMessage.msg["pe_ltp"];
+                            //}
+                        }
+
+                        else if(parsedInnerMessage.display === "form") {
+                                document.getElementById("nifty-ce-ltp").value = parsedInnerMessage.msg["nifty_ce_ltp"];
+                                document.getElementById("nifty-pe-ltp").value = parsedInnerMessage.msg["nifty_pe_ltp"];
+                                document.getElementById("nifty-atm").innerText = parsedInnerMessage.msg["nifty_atm"];
+
+                                document.getElementById("banknifty-ce-ltp").value = parsedInnerMessage.msg["banknifty_ce_ltp"];
+                                document.getElementById("banknifty-pe-ltp").value = parsedInnerMessage.msg["banknifty_pe_ltp"];
+                                document.getElementById("banknifty-atm").innerText = parsedInnerMessage.msg["banknifty_atm"];
+                        }
+
+                        if (parsedInnerMessage.display === "notification") {
+                            pp.add({ type: parsedInnerMessage.type, title: parsedInnerMessage.index, content: parsedInnerMessage.msg });
+                        }
+                    } catch (err) {
+                        console.error("Error handling WebSocket message:", err);
+                    }
+                };
+
+                socket.onclose = async (event) => {
+                    console.log("WebSocket closed:", event.code, event.reason);
+                    isConnected = false;
+                    await attemptReconnect(); // Attempt to reconnect after disconnection
+                };
+            } catch (error) {
+                console.error("WebSocket connection failed:", error);
+                await attemptReconnect(); // Retry connection on failure
+            }
+        }
+
+        // Function to attempt reconnection with a 2-second delay
+        async function attemptReconnect() {
+            if (!isConnected) {
+                console.log(`Attempting to reconnect in ${reconnectDelay / 1000} seconds...`);
+                await new Promise(resolve => setTimeout(resolve, reconnectDelay)); // Delay for reconnection
+                await connectWebSocket(); // Reconnect
+            }
+        }
+
+        window.onload = async function () {
+           await connectWebSocket();
+        };
+
+    </script>
+
+    <script>
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const logsArea = document.getElementById('logs-area'); // Reference to the textarea
+        const orderbookTableBody = document.querySelector('#orderbook tbody');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', async () => {
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(tab => tab.classList.remove('active'));
+        
+                button.classList.add('active');
+                const tabId = button.getAttribute('data-tab');
+                const tabContent = document.getElementById(tabId);
+        
+                if (tabId === "logs") {
+                    await loadLogs();
+                }
+                else if (tabId === "orderbook") {
+                    await loadOrderbook();
+                }
+        
+                tabContent.classList.add('active'); 
+            });
+        });
+        
+        async function loadOrderbook() {
+            try {
+                pp2.add({ type: 'info', title: 'orderbook', content: 'Fetching orderbook' });
+                const response = await fetch('/getorderbook', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}` // Assuming token is stored in localStorage
+                    }
+                });
+        
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status} ${response.statusText}`);
+                }
+        
+                const data = await response.json();
+                const orders = data.orderbook; // Get the orderbook array from the response
+        
+                // Clear existing table rows
+                orderbookTableBody.innerHTML = '';
+        
+                // Populate the table with order book data
+                orders.forEach(order => {
+                    const row = document.createElement('tr');
+        
+                    row.innerHTML = `
+                        <td>${order.time || 'N/A'}</td>
+                        <td>${order.type}</td>
+                        <td>${order.symbol}</td>
+                        <td>${order.qty}</td>
+                        <td>${order.price}</td>
+                        <td>${order.status}</td>
+                    `;
+        
+                    orderbookTableBody.appendChild(row);
+                });
+                pp2.add({ type: 'success', title: 'orderbook', content: 'orderbook Fetched' });
+
+            } catch (error) {
+                pp2.add({ type: 'error', title: 'orderbook', content: 'orderbook fetching Problem' });
+                console.error("Error fetching order book:", error);
+            }
+        }
+
+        async function loadLogs() {
+            try {
+                pp2.add({ type: 'info', title: 'Logs', content: 'Fetching logs' });
+                const response = await fetch('/getlogs', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}` // Assuming token is stored in localStorage
+                    }
+                });
+        
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.status} ${response.statusText}`);
+                }
+        
+                const data = await response.json();
+        
+                // Format the logs as text
+                const logs = data.logs.map(log => 
+                    `[${log.timestamp}] (${log.log_level}) ${log.message}`
+                ).join('\n');
+        
+                // Update the textarea content
+                logsArea.value = logs;
+                pp2.add({ type: 'success', title: 'Logs', content: 'Logs Fetched' });
+
+            } catch (error) {
+                logsArea.value = `Failed to load logs: ${error.message}`;
+                console.error("Error fetching logs:", error);
+                pp2.add({ type: 'error', title: 'logs', content: 'logs fetching Problem' });
+            }
+        }
+    </script>
+    <!-- <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script> -->
+
+
+
+
+</body>
+
+</html>
+
+
+<!-- // info
+
+pp.add({ type: 'success', title: 'Success', content: 'This is a success message.', });
+
+pp.add({
+    type: 'default',
+    title: 'Message',
+    content: 'This is a default message.',
+});
+
+pp.add({
+    type: 'info',
+    title: 'Info',
+    content: 'This is an info message.',
+});
+
+pp.add({
+    type: 'warning',
+    title: 'Warning',
+    content: 'This is a warning message.',
+});
+
+pp.add({
+        type: 'error',
+        title: 'Error',
+        content: 'This is an error message.',
+    });
+ 
+-->
